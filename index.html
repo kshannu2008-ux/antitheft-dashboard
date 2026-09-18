@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>PC Anti-Theft Dashboard</title>
+  <meta name="description" content="Remotely track, monitor, and lock your PC using the Anti-Theft Dashboard." />
+  <meta name="theme-color" content="#5b6cf9" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="AntiTheft" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-512.jpg" type="image/jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="login-screen" class="screen active">
+  <div class="login-card glass">
+    <div class="brand">
+      <div class="brand-icon">🛡️</div>
+      <h1>PC Anti-Theft</h1>
+      <p>Secure remote control dashboard</p>
+    </div>
+    <div class="form-group">
+      <label for="input-project-id">Firebase Project ID</label>
+      <input id="input-project-id" type="text" placeholder="your-project-id" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="input-api-key">Firebase API Key</label>
+      <input id="input-api-key" type="password" placeholder="AIza..." autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="input-device-id">Device ID</label>
+      <input id="input-device-id" type="text" placeholder="my-pc" value="my-pc" autocomplete="off" />
+    </div>
+    <button id="btn-login" class="btn btn-primary" onclick="login()">
+      <span>Connect to Device</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+    <div id="login-error" class="error-msg hidden"></div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD SCREEN ============ -->
+<div id="dashboard-screen" class="screen">
+
+  <!-- Sidebar -->
+  <aside class="sidebar glass">
+    <div class="sidebar-brand">
+      <span class="brand-icon-sm">🛡️</span>
+      <span>AntiTheft</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" onclick="showTab('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('location')">
+        <span class="nav-icon">📍</span> Location
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('webcam')">
+        <span class="nav-icon">📷</span> Webcam
+      </a>
+      <a href="#" class="nav-item" onclick="showTab('screenshot')">
+        <span class="nav-icon">🖥️</span> Screenshot
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div id="status-dot" class="status-indicator offline">
+        <span class="dot"></span>
+        <span id="status-text">Checking...</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Disconnect</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+
+    <!-- Header -->
+    <header class="top-bar">
+      <div>
+        <h2 id="tab-title">Overview</h2>
+        <p id="last-seen-text" class="subtitle">Last seen: —</p>
+      </div>
+      <div class="header-actions">
+        <div id="device-badge" class="device-badge">
+          <span class="dot green"></span>
+          <span id="header-device-id">my-pc</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======= OVERVIEW TAB ======= -->
+    <div id="tab-overview" class="tab-content active">
+      <div class="stats-grid">
+        <div class="stat-card glass">
+          <div class="stat-icon">📍</div>
+          <div class="stat-info">
+            <div class="stat-label">Last Location</div>
+            <div id="stat-city" class="stat-value">—</div>
+            <div id="stat-ip" class="stat-meta">IP: —</div>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon">🕒</div>
+          <div class="stat-info">
+            <div class="stat-label">Last Seen</div>
+            <div id="stat-lastseen" class="stat-value">—</div>
+            <div class="stat-meta">Device time (UTC)</div>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon">🌐</div>
+          <div class="stat-info">
+            <div class="stat-label">ISP</div>
+            <div id="stat-isp" class="stat-value">—</div>
+            <div class="stat-meta">Internet Provider</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Actions -->
+      <div class="section-title">⚡ Remote Commands</div>
+      <div class="actions-grid">
+        <button id="btn-lock" class="action-btn danger glass" onclick="sendCommand('lock_requested')">
+          <div class="action-icon">🔒</div>
+          <div class="action-label">Lock PC Now</div>
+          <div class="action-desc">Immediately lock the Windows screen</div>
+        </button>
+        <button id="btn-webcam" class="action-btn info glass" onclick="sendCommand('take_webcam')">
+          <div class="action-icon">📷</div>
+          <div class="action-label">Webcam Snapshot</div>
+          <div class="action-desc">Capture a photo from the PC camera</div>
+        </button>
+        <button id="btn-screenshot" class="action-btn success glass" onclick="sendCommand('take_screenshot')">
+          <div class="action-icon">🖥️</div>
+          <div class="action-label">Take Screenshot</div>
+          <div class="action-desc">Capture the current PC screen</div>
+        </button>
+      </div>
+
+      <div id="command-toast" class="toast hidden"></div>
+    </div>
+
+    <!-- ======= LOCATION TAB ======= -->
+    <div id="tab-location" class="tab-content">
+      <div class="map-container glass">
+        <div id="map"></div>
+        <div class="map-overlay glass" id="map-info">
+          <div id="map-city">📍 —</div>
+          <div id="map-coords">Lat/Lon: —</div>
+          <div id="map-country">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= WEBCAM TAB ======= -->
+    <div id="tab-webcam" class="tab-content">
+      <div class="media-section">
+        <div class="media-actions">
+          <button class="btn btn-primary" onclick="sendCommand('take_webcam')">📷 Capture Now</button>
+        </div>
+        <div id="webcam-container" class="media-container glass">
+          <div class="media-placeholder" id="webcam-placeholder">
+            <div class="placeholder-icon">📷</div>
+            <p>No webcam image yet.<br/>Click "Capture Now" to take a snapshot.</p>
+          </div>
+          <div id="webcam-image-wrap" class="hidden">
+            <img id="webcam-img" src="" alt="Webcam snapshot" class="media-img" />
+            <div id="webcam-time" class="media-timestamp"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= SCREENSHOT TAB ======= -->
+    <div id="tab-screenshot" class="tab-content">
+      <div class="media-section">
+        <div class="media-actions">
+          <button class="btn btn-primary" onclick="sendCommand('take_screenshot')">🖥️ Capture Now</button>
+        </div>
+        <div id="screenshot-container" class="media-container glass">
+          <div class="media-placeholder" id="screenshot-placeholder">
+            <div class="placeholder-icon">🖥️</div>
+            <p>No screenshot yet.<br/>Click "Capture Now" to take a screenshot.</p>
+          </div>
+          <div id="screenshot-image-wrap" class="hidden">
+            <img id="screenshot-img" src="" alt="PC Screenshot" class="media-img" />
+            <div id="screenshot-time" class="media-timestamp"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+<script>
+  // Register service worker for PWA/Android support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
