@@ -14,8 +14,7 @@
   <link rel="icon" href="icon-512.jpg" type="image/jpeg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -136,15 +135,12 @@
     <!-- ======= MOBILE CAM TAB ======= -->
     <div id="tab-mobilecam" class="tab-content">
       <div class="mobilecam-layout">
+        <!-- Live feed box -->
         <div class="mobilecam-stream-box glass">
           <div id="mobilecam-placeholder" class="mobilecam-placeholder">
             <div style="font-size:60px;margin-bottom:16px;opacity:0.4">🎥</div>
-            <h3 style="margin-bottom:8px">Phone Camera</h3>
-            <p style="color:#8892a4;margin-bottom:20px;font-size:14px">Open the link below on your phone to start streaming</p>
-            <div class="mobilecam-link-box">
-              <span id="mobilecam-link-text" style="font-size:13px;word-break:break-all">https://kshannu2008-ux.github.io/antitheft-dashboard/mobile-cam.html</span>
-              <button class="btn btn-secondary btn-sm" onclick="copyMobileCamLink()">📋 Copy</button>
-            </div>
+            <h3 style="margin-bottom:8px">Phone Camera Feed</h3>
+            <p style="color:#8892a4;font-size:14px">Tap the button on the right to start streaming from your phone</p>
           </div>
           <div id="mobilecam-active" class="hidden">
             <div class="mobilecam-live-badge">🔴 LIVE</div>
@@ -152,23 +148,33 @@
             <div id="mobilecam-time" class="media-timestamp"></div>
           </div>
         </div>
+
+        <!-- Controls -->
         <div class="mobilecam-info glass">
           <div class="control-header">
             <span class="control-icon">📱</span>
-            <span class="control-title">How to use</span>
+            <span class="control-title">1-Tap Phone Camera</span>
           </div>
-          <ol class="mobilecam-steps">
-            <li>Open your phone browser (Chrome)</li>
-            <li>Go to the link shown on the left</li>
-            <li>Enter your Firebase details</li>
-            <li>Tap <strong>Start Streaming</strong></li>
-            <li>Allow camera permission</li>
-            <li>The live feed appears here! 🎥</li>
-          </ol>
-          <div style="margin-top:16px">
-            <a id="mobilecam-open-link" href="https://kshannu2008-ux.github.io/antitheft-dashboard/mobile-cam.html" target="_blank" class="btn btn-primary" style="display:flex;justify-content:center">📷 Open Camera Page</a>
+          <p style="font-size:13px;color:#8892a4;margin:8px 0 20px;">Open this link on your phone &mdash; the camera starts <strong style="color:#a5b4fc">instantly</strong>, no setup needed.</p>
+
+          <!-- Big instant-open button -->
+          <a id="mobilecam-open-link"
+             href="https://kshannu2008-ux.github.io/antitheft-dashboard/mobile-cam.html"
+             target="_blank"
+             class="btn btn-primary"
+             style="display:flex;justify-content:center;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:16px;padding:16px;border-radius:14px;background:linear-gradient(135deg,#5b6cf9,#8b5cf6);box-shadow:0 8px 28px rgba(91,108,249,0.35);">
+            📷 Open Phone Camera
+          </a>
+
+          <!-- QR code for scanning -->
+          <div style="text-align:center;margin-top:24px;">
+            <p style="font-size:12px;color:#8892a4;margin-bottom:10px;font-weight:600">OR SCAN WITH YOUR PHONE</p>
+            <div style="display:inline-block;padding:10px;background:#ffffff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.4)">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://kshannu2008-ux.github.io/antitheft-dashboard/mobile-cam.html" alt="QR Code" width="160" height="160" style="display:block;border-radius:6px;"/>
+            </div>
           </div>
-          <div id="mobilecam-fps" class="sysinfo-detail" style="margin-top:12px"></div>
+
+          <div id="mobilecam-fps" class="sysinfo-detail" style="margin-top:14px;text-align:center;"></div>
         </div>
       </div>
     </div>
@@ -406,7 +412,7 @@
     <!-- ======= LOCATION TAB ======= -->
     <div id="tab-location" class="tab-content">
       <div class="map-container glass">
-        <div id="map"></div>
+        <iframe id="map-frame" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         <div class="map-overlay glass" id="map-info">
           <div id="map-city">📍 —</div>
           <div id="map-coords">Lat/Lon: —</div>

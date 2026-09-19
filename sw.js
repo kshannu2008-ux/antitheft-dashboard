@@ -1,5 +1,5 @@
 // Service Worker for PC Anti-Theft PWA
-const CACHE_NAME = "antitheft-v4";
+const CACHE_NAME = "antitheft-v6";
 const ASSETS = [
   "./index.html",
   "./style.css",

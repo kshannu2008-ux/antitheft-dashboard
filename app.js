@@ -350,108 +350,26 @@ function getFileIcon(filename) {
 // Map
 // ============================================================
 function initMap() {
-  if (map) return;
-
-  map = L.map("map", { zoomControl: true, attributionControl: true }).setView([20, 0], 2);
-
-  // ── Tile layers ──────────────────────────────────────────
-  const street = L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>', subdomains: 'abcd', maxZoom: 21, maxNativeZoom: 19 }
-  );
-
-  const satellite = L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    { attribution: 'Imagery &copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 21, maxNativeZoom: 18 }
-  );
-
-  const hybrid = L.layerGroup([
-    L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      { attribution: 'Imagery &copy; Esri', maxZoom: 21, maxNativeZoom: 18 }
-    ),
-    L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-      { attribution: '', maxZoom: 21, maxNativeZoom: 18, opacity: 0.85 }
-    )
-  ]);
-
-  // Default: street (most up-to-date, best labels)
-  street.addTo(map);
-
-  // Layer switcher control (top-right)
-  L.control.layers(
-    { "🗺️ Street (Latest)": street, "🛰️ Satellite": satellite, "🌍 Hybrid": hybrid },
-    {},
-    { position: 'topright', collapsed: false }
-  ).addTo(map);
+  // No complex map library needed, we just use a Google Maps iframe
 }
 
 function updateMap(lat, lon, city, country) {
-  if (!map || !lat || !lon) return;
-  const pos = [lat, lon];
+  if (!lat || !lon) return;
 
-  // Custom pulsing icon
-  const pulseIcon = L.divIcon({
-    className: '',
-    html: `
-      <div style="
-        position:relative;
-        width:20px; height:20px;
-      ">
-        <div style="
-          position:absolute; inset:-12px;
-          background:rgba(91,108,249,0.18);
-          border-radius:50%;
-          animation:mapPulse 2s ease-out infinite;
-        "></div>
-        <div style="
-          width:20px; height:20px;
-          background:linear-gradient(135deg,#5b6cf9,#8b5cf6);
-          border-radius:50%;
-          border:3px solid #fff;
-          box-shadow:0 3px 12px rgba(91,108,249,0.6);
-        "></div>
-      </div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    popupAnchor: [0, -16]
-  });
-
-  // Add CSS animation if not yet added
-  if (!document.getElementById('map-pulse-style')) {
-    const style = document.createElement('style');
-    style.id = 'map-pulse-style';
-    style.textContent = `
-      @keyframes mapPulse {
-        0%   { transform: scale(0.4); opacity: 0.8; }
-        80%  { transform: scale(2.4); opacity: 0; }
-        100% { transform: scale(2.4); opacity: 0; }
-      }`;
-    document.head.appendChild(style);
-  }
-
-  if (!marker) {
-    marker = L.marker(pos, { icon: pulseIcon }).addTo(map);
-  } else {
-    marker.setLatLng(pos);
-    marker.setIcon(pulseIcon);
+  const frame = document.getElementById("map-frame");
+  if (frame) {
+    // Generate Google Maps Embed URL
+    // hl=en (Language)
+    // z=15 (Zoom level)
+    // q=lat,lon (Coordinates)
+    frame.src = `https://maps.google.com/maps?q=${lat},${lon}&hl=en&z=15&output=embed`;
   }
 
   const updated = new Date().toLocaleTimeString();
-  marker.bindPopup(
-    `<b style="font-size:14px">📍 ${city}</b><br/>
-     <span style="color:#666">${country}</span><br/>
-     <small>Lat ${lat.toFixed(5)}, Lon ${lon.toFixed(5)}</small><br/>
-     <small style="color:#aaa">Updated: ${updated}</small>`
-  ).openPopup();
-
-  // Smooth fly-to animation
-  map.flyTo(pos, 13, { animate: true, duration: 1.2 });
-
-  document.getElementById("map-city").textContent    = `📍 ${city}`;
+  
+  document.getElementById("map-city").textContent    = `📍 ${city || 'Unknown City'}`;
   document.getElementById("map-coords").textContent  = `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)}`;
-  document.getElementById("map-country").textContent = `${country} · Updated: ${updated}`;
+  document.getElementById("map-country").textContent = `${country || ''} · Updated: ${updated}`;
 }
 
 // ============================================================
