@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>📷 Mobile Camera — AntiTheft</title>
+  <meta name="theme-color" content="#5b6cf9"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0d14; --surface: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.1); --primary: #5b6cf9;
+      --text: #e8eaf0; --muted: #8892a4; --radius: 16px;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 20px 16px;
+    }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; width: 100%;
+      max-width: 480px; margin-bottom: 16px;
+    }
+    label { display: block; font-size: 12px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 11px 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+      font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px;
+    }
+    input:focus { border-color: var(--primary); }
+    .btn {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; margin-bottom: 8px;
+    }
+    .btn-primary { background: linear-gradient(135deg,#5b6cf9,#8b5cf6); color: white; }
+    .btn-danger  { background: linear-gradient(135deg,#ef4444,#dc2626); color: white; }
+    .btn-secondary { background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--text); }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    #status-msg {
+      text-align: center; font-size: 13px; padding: 12px;
+      border-radius: 10px; margin-bottom: 12px;
+    }
+    .status-ok  { background: rgba(34,197,94,0.15); color: #86efac; }
+    .status-err { background: rgba(239,68,68,0.15); color: #fca5a5; }
+    .status-info{ background: rgba(91,108,249,0.15); color: #a5b4fc; }
+    video {
+      width: 100%; border-radius: 12px; background: #000;
+      display: none; max-height: 300px; object-fit: cover;
+    }
+    .cam-wrap { position: relative; }
+    .cam-indicator {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(0,0,0,0.6); border-radius: 8px;
+      padding: 4px 10px; font-size: 12px; font-weight: 600;
+      color: #ef4444; display: none;
+    }
+    .cam-indicator.live { display: block; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .stats { font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px; }
+    select {
+      width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+      font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px;
+    }
+    .hidden { display: none !important; }
+    .cam-controls { display: flex; gap: 8px; }
+    .cam-controls .btn { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+
+<div style="text-align:center; margin-bottom:20px;">
+  <div style="font-size:40px; margin-bottom:8px;">📷</div>
+  <h1>Mobile Camera Stream</h1>
+  <p class="subtitle">Stream your phone camera to the PC dashboard</p>
+</div>
+
+<!-- Setup card -->
+<div class="card" id="setup-card">
+  <label>Firebase Project ID</label>
+  <input id="in-pid" type="text" placeholder="my-antitheft-d53c2" autocomplete="off"/>
+  <label>Firebase API Key</label>
+  <input id="in-key" type="password" placeholder="AIza..." autocomplete="off"/>
+  <label>Device ID</label>
+  <input id="in-dev" type="text" placeholder="my-pc" value="my-pc" autocomplete="off"/>
+  <label>Camera</label>
+  <select id="cam-select">
+    <option value="environment">Back Camera (recommended)</option>
+    <option value="user">Front Camera (selfie)</option>
+  </select>
+  <button class="btn btn-primary" onclick="startStream()">🎬 Start Streaming to PC</button>
+</div>
+
+<!-- Stream card -->
+<div class="card hidden" id="stream-card">
+  <div id="status-msg" class="status-info">⏳ Connecting...</div>
+  <div class="cam-wrap">
+    <video id="cam-video" autoplay muted playsinline></video>
+    <div class="cam-indicator" id="live-badge">🔴 LIVE</div>
+  </div>
+  <div class="stats" id="stats-text"></div>
+  <div class="cam-controls" style="margin-top:12px;">
+    <button class="btn btn-secondary" onclick="flipCamera()">🔄 Flip Camera</button>
+    <button class="btn btn-danger" onclick="stopStream()">⏹ Stop</button>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────
+const FS_BASE = pid =>
+  `https://firestore.googleapis.com/v1/projects/${pid}/databases/(default)/documents`;
+
+let PROJECT_ID = '', API_KEY = '', DEVICE_ID = 'my-pc';
+let stream = null, canvas = null, ctx = null;
+let streamTimer = null, frameCount = 0;
+let currentFacing = 'environment';
+let streaming = false;
+
+// ── Load saved credentials ───────────────────────────────
+window.onload = () => {
+  const saved = JSON.parse(localStorage.getItem('antitheft_creds') || '{}');
+  if (saved.pid) document.getElementById('in-pid').value = saved.pid;
+  if (saved.key) document.getElementById('in-key').value = saved.key;
+  if (saved.dev) document.getElementById('in-dev').value = saved.dev;
+};
+
+// ── Firestore helpers ────────────────────────────────────
+async function patchCamFrame(b64, ts) {
+  const mask = 'updateMask.fieldPaths=mobile_cam_frame&updateMask.fieldPaths=mobile_cam_time&updateMask.fieldPaths=mobile_cam_active';
+  const url = `${FS_BASE(PROJECT_ID)}/devices/${DEVICE_ID}?key=${API_KEY}&${mask}`;
+  await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: {
+      mobile_cam_frame: { stringValue: b64 },
+      mobile_cam_time:  { stringValue: ts },
+      mobile_cam_active:{ booleanValue: true }
+    }})
+  });
+}
+
+async function setCamInactive() {
+  const mask = 'updateMask.fieldPaths=mobile_cam_active';
+  const url = `${FS_BASE(PROJECT_ID)}/devices/${DEVICE_ID}?key=${API_KEY}&${mask}`;
+  await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: { mobile_cam_active: { booleanValue: false } }})
+  });
+}
+
+// ── Camera start ─────────────────────────────────────────
+async function startStream() {
+  PROJECT_ID = document.getElementById('in-pid').value.trim();
+  API_KEY    = document.getElementById('in-key').value.trim();
+  DEVICE_ID  = document.getElementById('in-dev').value.trim() || 'my-pc';
+  currentFacing = document.getElementById('cam-select').value;
+
+  if (!PROJECT_ID || !API_KEY) {
+    alert('Please enter Firebase credentials.'); return;
+  }
+  localStorage.setItem('antitheft_creds', JSON.stringify({ pid: PROJECT_ID, key: API_KEY, dev: DEVICE_ID }));
+
+  setStatus('⏳ Starting camera...', 'info');
+  document.getElementById('setup-card').classList.add('hidden');
+  document.getElementById('stream-card').classList.remove('hidden');
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacing, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    const video = document.getElementById('cam-video');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    video.onloadedmetadata = () => { video.play(); startFrameLoop(); };
+  } catch (e) {
+    setStatus('❌ Camera access denied: ' + e.message, 'err');
+  }
+}
+
+function startFrameLoop() {
+  canvas = document.createElement('canvas');
+  const video = document.getElementById('cam-video');
+  canvas.width  = Math.min(video.videoWidth,  1280);
+  canvas.height = Math.min(video.videoHeight, 720);
+  ctx = canvas.getContext('2d');
+  streaming = true;
+  document.getElementById('live-badge').classList.add('live');
+  setStatus('🔴 Live — Streaming to PC dashboard', 'ok');
+  captureFrame();
+}
+
+async function captureFrame() {
+  if (!streaming) return;
+  const video = document.getElementById('cam-video');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+  const ts = new Date().toISOString();
+  try {
+    await patchCamFrame(b64, ts);
+    frameCount++;
+    document.getElementById('stats-text').textContent =
+      `Frames sent: ${frameCount} | Size: ~${Math.round(b64.length/1024)}KB | ${canvas.width}x${canvas.height}`;
+  } catch(e) {
+    document.getElementById('stats-text').textContent = 'Upload error: ' + e.message;
+  }
+  // ~3 fps: 333ms between frames for smoothness
+  if (streaming) setTimeout(captureFrame, 333);
+}
+
+async function flipCamera() {
+  currentFacing = currentFacing === 'environment' ? 'user' : 'environment';
+  if (stream) { stream.getTracks().forEach(t => t.stop()); }
+  streaming = false;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacing }, audio: false
+    });
+    const video = document.getElementById('cam-video');
+    video.srcObject = stream;
+    video.onloadedmetadata = () => { video.play(); startFrameLoop(); };
+  } catch(e) { setStatus('❌ Flip failed: ' + e.message, 'err'); }
+}
+
+async function stopStream() {
+  streaming = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  await setCamInactive();
+  document.getElementById('cam-video').style.display = 'none';
+  document.getElementById('live-badge').classList.remove('live');
+  document.getElementById('stream-card').classList.add('hidden');
+  document.getElementById('setup-card').classList.remove('hidden');
+  setStatus('', 'info');
+  frameCount = 0;
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = 'status-msg status-' + type;
+}
+</script>
+</body>
+</html>

@@ -58,16 +58,35 @@
       <span>AntiTheft</span>
     </div>
     <nav class="sidebar-nav">
-      <a href="#" class="nav-item active" onclick="showTab('overview')">
+      <a href="#" class="nav-item active" id="nav-overview" onclick="showTab('overview')">
         <span class="nav-icon">📊</span> Overview
       </a>
-      <a href="#" class="nav-item" onclick="showTab('location')">
+      <a href="#" class="nav-item" id="nav-notifs" onclick="showTab('notifs')">
+        <span class="nav-icon">🔔</span> Notifications
+        <span class="nav-badge" id="notif-badge" style="display:none">0</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-sysinfo" onclick="showTab('sysinfo')">
+        <span class="nav-icon">🔋</span> System Info
+      </a>
+      <a href="#" class="nav-item" id="nav-controls" onclick="showTab('controls')">
+        <span class="nav-icon">🎛️</span> Controls
+      </a>
+      <a href="#" class="nav-item" id="nav-clipboard" onclick="showTab('clipboard')">
+        <span class="nav-icon">📋</span> Clipboard
+      </a>
+      <a href="#" class="nav-item" id="nav-files" onclick="showTab('files')">
+        <span class="nav-icon">📁</span> Files
+      </a>
+      <a href="#" class="nav-item" id="nav-mobilecam" onclick="showTab('mobilecam')">
+        <span class="nav-icon">🎥</span> Phone Camera
+      </a>
+      <a href="#" class="nav-item" id="nav-location" onclick="showTab('location')">
         <span class="nav-icon">📍</span> Location
       </a>
-      <a href="#" class="nav-item" onclick="showTab('webcam')">
+      <a href="#" class="nav-item" id="nav-webcam" onclick="showTab('webcam')">
         <span class="nav-icon">📷</span> Webcam
       </a>
-      <a href="#" class="nav-item" onclick="showTab('screenshot')">
+      <a href="#" class="nav-item" id="nav-screenshot" onclick="showTab('screenshot')">
         <span class="nav-icon">🖥️</span> Screenshot
       </a>
     </nav>
@@ -94,8 +113,65 @@
           <span class="dot green"></span>
           <span id="header-device-id">my-pc</span>
         </div>
+        <button class="btn-refresh-sm" onclick="refreshData()" title="Refresh now">🔄</button>
       </div>
     </header>
+
+    <!-- ======= NOTIFICATIONS TAB ======= -->
+    <div id="tab-notifs" class="tab-content">
+      <div class="notif-toolbar glass">
+        <span id="notif-count-label" class="notif-count-label">No notifications yet</span>
+        <button class="btn btn-secondary btn-sm" onclick="clearNotifications()">🗑️ Clear All</button>
+      </div>
+      <div id="notif-list" class="notif-list">
+        <div class="notif-empty">
+          <div style="font-size:50px;margin-bottom:12px;opacity:0.3">🔔</div>
+          <p>Phone notifications will appear here.</p>
+          <p style="margin-top:8px;font-size:13px;color:#8892a4">Install the companion Android app to start receiving notifications.</p>
+          <a href="#" onclick="showTab('overview')" style="display:inline-block;margin-top:14px;padding:10px 20px;background:rgba(91,108,249,0.2);border:1px solid rgba(91,108,249,0.4);border-radius:10px;color:#a5b4fc;font-size:13px;font-weight:600;text-decoration:none">📱 Get Android App Instructions</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= MOBILE CAM TAB ======= -->
+    <div id="tab-mobilecam" class="tab-content">
+      <div class="mobilecam-layout">
+        <div class="mobilecam-stream-box glass">
+          <div id="mobilecam-placeholder" class="mobilecam-placeholder">
+            <div style="font-size:60px;margin-bottom:16px;opacity:0.4">🎥</div>
+            <h3 style="margin-bottom:8px">Phone Camera</h3>
+            <p style="color:#8892a4;margin-bottom:20px;font-size:14px">Open the link below on your phone to start streaming</p>
+            <div class="mobilecam-link-box">
+              <span id="mobilecam-link-text" style="font-size:13px;word-break:break-all">https://kshannu2008-ux.github.io/antitheft-dashboard/mobile-cam.html</span>
+              <button class="btn btn-secondary btn-sm" onclick="copyMobileCamLink()">📋 Copy</button>
+            </div>
+          </div>
+          <div id="mobilecam-active" class="hidden">
+            <div class="mobilecam-live-badge">🔴 LIVE</div>
+            <img id="mobilecam-img" src="" alt="Phone Camera" class="mobilecam-img"/>
+            <div id="mobilecam-time" class="media-timestamp"></div>
+          </div>
+        </div>
+        <div class="mobilecam-info glass">
+          <div class="control-header">
+            <span class="control-icon">📱</span>
+            <span class="control-title">How to use</span>
+          </div>
+          <ol class="mobilecam-steps">
+            <li>Open your phone browser (Chrome)</li>
+            <li>Go to the link shown on the left</li>
+            <li>Enter your Firebase details</li>
+            <li>Tap <strong>Start Streaming</strong></li>
+            <li>Allow camera permission</li>
+            <li>The live feed appears here! 🎥</li>
+          </ol>
+          <div style="margin-top:16px">
+            <a id="mobilecam-open-link" href="https://kshannu2008-ux.github.io/antitheft-dashboard/mobile-cam.html" target="_blank" class="btn btn-primary" style="display:flex;justify-content:center">📷 Open Camera Page</a>
+          </div>
+          <div id="mobilecam-fps" class="sysinfo-detail" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- ======= OVERVIEW TAB ======= -->
     <div id="tab-overview" class="tab-content active">
@@ -117,22 +193,40 @@
           </div>
         </div>
         <div class="stat-card glass">
-          <div class="stat-icon">🌐</div>
+          <div class="stat-icon">💻</div>
           <div class="stat-info">
-            <div class="stat-label">ISP</div>
-            <div id="stat-isp" class="stat-value">—</div>
-            <div class="stat-meta">Internet Provider</div>
+            <div class="stat-label">CPU Usage</div>
+            <div id="stat-cpu" class="stat-value">—</div>
+            <div id="stat-ram" class="stat-meta">RAM: —</div>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon">🔋</div>
+          <div class="stat-info">
+            <div class="stat-label">Battery</div>
+            <div id="stat-battery" class="stat-value">—</div>
+            <div id="stat-uptime" class="stat-meta">Uptime: —</div>
           </div>
         </div>
       </div>
 
       <!-- Emergency Actions -->
-      <div class="section-title">⚡ Remote Commands</div>
+      <div class="section-title">⚡ Quick Commands</div>
       <div class="actions-grid">
         <button id="btn-lock" class="action-btn danger glass" onclick="sendCommand('lock_requested')">
           <div class="action-icon">🔒</div>
           <div class="action-label">Lock PC Now</div>
           <div class="action-desc">Immediately lock the Windows screen</div>
+        </button>
+        <button id="btn-lock-phone" class="action-btn danger glass" onclick="sendCommand('phone_lock_requested')" style="border-color: rgba(239, 68, 68, 0.45);">
+          <div class="action-icon">📱🔒</div>
+          <div class="action-label">Lock Phone Now</div>
+          <div class="action-desc">Remotely lock your Android phone screen</div>
+        </button>
+        <button id="btn-ring-phone" class="action-btn warning glass" onclick="sendCommand('phone_ring_requested')">
+          <div class="action-icon">🔊📱</div>
+          <div class="action-label">Ring Phone</div>
+          <div class="action-desc">Sound alarm on phone at max volume</div>
         </button>
         <button id="btn-webcam" class="action-btn info glass" onclick="sendCommand('take_webcam')">
           <div class="action-icon">📷</div>
@@ -144,9 +238,169 @@
           <div class="action-label">Take Screenshot</div>
           <div class="action-desc">Capture the current PC screen</div>
         </button>
+        <button id="btn-refresh-sysinfo" class="action-btn warning glass" onclick="sendCommand('refresh_sysinfo')">
+          <div class="action-icon">🔄</div>
+          <div class="action-label">Refresh Stats</div>
+          <div class="action-desc">Force update CPU, RAM, battery info</div>
+        </button>
       </div>
 
       <div id="command-toast" class="toast hidden"></div>
+    </div>
+
+    <!-- ======= SYSTEM INFO TAB ======= -->
+    <div id="tab-sysinfo" class="tab-content">
+      <div class="sysinfo-grid">
+
+        <!-- CPU -->
+        <div class="sysinfo-card glass">
+          <div class="sysinfo-header">
+            <span class="sysinfo-icon">💻</span>
+            <span class="sysinfo-title">CPU Usage</span>
+            <span id="si-cpu-val" class="sysinfo-value">—</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="si-cpu-bar" class="progress-bar cpu-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- RAM -->
+        <div class="sysinfo-card glass">
+          <div class="sysinfo-header">
+            <span class="sysinfo-icon">🧠</span>
+            <span class="sysinfo-title">RAM Memory</span>
+            <span id="si-ram-val" class="sysinfo-value">—</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="si-ram-bar" class="progress-bar ram-bar" style="width:0%"></div>
+          </div>
+          <div id="si-ram-detail" class="sysinfo-detail">— GB / — GB</div>
+        </div>
+
+        <!-- Disk -->
+        <div class="sysinfo-card glass">
+          <div class="sysinfo-header">
+            <span class="sysinfo-icon">💾</span>
+            <span class="sysinfo-title">Disk Space</span>
+            <span id="si-disk-val" class="sysinfo-value">—</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="si-disk-bar" class="progress-bar disk-bar" style="width:0%"></div>
+          </div>
+          <div id="si-disk-detail" class="sysinfo-detail">— GB used / — GB total</div>
+        </div>
+
+        <!-- Battery -->
+        <div class="sysinfo-card glass">
+          <div class="sysinfo-header">
+            <span class="sysinfo-icon">🔋</span>
+            <span class="sysinfo-title">Battery</span>
+            <span id="si-bat-val" class="sysinfo-value">—</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="si-bat-bar" class="progress-bar bat-bar" style="width:0%"></div>
+          </div>
+          <div id="si-bat-status" class="sysinfo-detail">—</div>
+        </div>
+
+        <!-- Uptime -->
+        <div class="sysinfo-card glass sysinfo-wide">
+          <div class="sysinfo-header">
+            <span class="sysinfo-icon">⏱️</span>
+            <span class="sysinfo-title">System Uptime</span>
+            <span id="si-uptime-val" class="sysinfo-value">—</span>
+          </div>
+          <div id="si-sysinfo-updated" class="sysinfo-detail">Last updated: —</div>
+        </div>
+
+      </div>
+      <button class="btn btn-primary mt-16" onclick="sendCommand('refresh_sysinfo')">🔄 Refresh Now</button>
+    </div>
+
+    <!-- ======= CONTROLS TAB ======= -->
+    <div id="tab-controls" class="tab-content">
+
+      <!-- Volume -->
+      <div class="control-section glass">
+        <div class="control-header">
+          <span class="control-icon">🔊</span>
+          <span class="control-title">Volume Control</span>
+          <span id="vol-display" class="control-badge">—%</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">0</span>
+          <input type="range" id="volume-slider" min="0" max="100" value="50" class="volume-slider" oninput="updateVolDisplay(this.value)" />
+          <span class="slider-label">100</span>
+        </div>
+        <button class="btn btn-primary" onclick="setVolume()">🔊 Set Volume</button>
+        <button class="btn btn-secondary mt-8" onclick="setVolume(0)">🔇 Mute</button>
+      </div>
+
+      <!-- Send Message -->
+      <div class="control-section glass">
+        <div class="control-header">
+          <span class="control-icon">💬</span>
+          <span class="control-title">Send Notification to PC</span>
+        </div>
+        <textarea id="notif-text" class="control-textarea" placeholder="Type a message to show on your PC screen..." rows="3"></textarea>
+        <button class="btn btn-primary" onclick="sendNotification()">📤 Send to PC</button>
+      </div>
+
+      <!-- Remote Phone Control -->
+      <div class="control-section glass mt-16">
+        <div class="control-header">
+          <span class="control-icon">📱</span>
+          <span class="control-title">Phone Remote Control</span>
+        </div>
+        <p class="control-desc">Manage your Android phone directly from this PC dashboard.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn btn-danger" onclick="sendCommand('phone_lock_requested')">🔒 Lock Phone Now</button>
+          <button class="btn btn-warning" onclick="sendCommand('phone_ring_requested')">🔊 Ring Phone (Max Volume)</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======= CLIPBOARD TAB ======= -->
+    <div id="tab-clipboard" class="tab-content">
+      <div class="control-section glass">
+        <div class="control-header">
+          <span class="control-icon">📋</span>
+          <span class="control-title">Clipboard Sync</span>
+        </div>
+        <p class="control-desc">Type text here → it will be pasted into your PC's clipboard automatically.</p>
+        <textarea id="clipboard-text" class="control-textarea" placeholder="Type or paste text here to send to PC clipboard..." rows="6"></textarea>
+        <button class="btn btn-primary" onclick="sendClipboard()">📋 Send to PC Clipboard</button>
+      </div>
+      <div class="control-section glass mt-16">
+        <div class="control-header">
+          <span class="control-icon">📤</span>
+          <span class="control-title">Last Sent</span>
+        </div>
+        <div id="clipboard-last" class="clip-preview">Nothing sent yet.</div>
+        <div id="clipboard-last-time" class="sysinfo-detail"></div>
+      </div>
+    </div>
+
+    <!-- ======= FILE BROWSER TAB ======= -->
+    <div id="tab-files" class="tab-content">
+      <div class="files-header glass">
+        <div class="breadcrumb" id="breadcrumb">
+          <span class="breadcrumb-item" onclick="browseRoot()">🖥️ My Computer</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="browseRoot()">🏠 Home</button>
+      </div>
+      <div id="file-list-loading" class="files-loading hidden">
+        <div class="spinner"></div>
+        <span>Loading files...</span>
+      </div>
+      <div id="file-list-container" class="file-list glass">
+        <div class="files-placeholder">
+          <div class="placeholder-icon">📁</div>
+          <p>Click "Load Drives" to start browsing your PC files.</p>
+          <button class="btn btn-primary" onclick="browseRoot()">📂 Load Drives</button>
+        </div>
+      </div>
     </div>
 
     <!-- ======= LOCATION TAB ======= -->
@@ -204,7 +458,6 @@
 
 <script src="app.js"></script>
 <script>
-  // Register service worker for PWA/Android support
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
