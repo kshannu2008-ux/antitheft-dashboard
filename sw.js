@@ -1,16 +1,15 @@
 // Service Worker for PC Anti-Theft PWA
-// Enables offline caching and installability on Android
-
-const CACHE_NAME = "antitheft-v1";
+const CACHE_NAME = "antitheft-v4";
 const ASSETS = [
   "./index.html",
   "./style.css",
   "./app.js",
   "./manifest.json",
+  "./mobile-cam.html",
   "./icon-512.jpg"
 ];
 
-// Install: cache all assets
+// Install: cache assets and activate immediately
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -18,7 +17,7 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean old caches
+// Activate: clean all old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -28,9 +27,17 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch: serve from cache, fall back to network
+// Fetch: NETWORK FIRST so updates appear instantly on phone
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && event.request.method === "GET") {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
